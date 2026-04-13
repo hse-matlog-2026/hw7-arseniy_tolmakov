@@ -159,6 +159,26 @@ class Term:
             or a variable name (e.g., ``'x12'``), then the parsed prefix will be
             that entire name (and not just a part of it, such as ``'x1'``).
         """
+        assert len(string) > 0
+        if string[0] == '_':
+            return Term('_'), string[1:]
+        i = 1
+        while i < len(string) and string[i].isalnum():
+            i += 1
+        root = string[:i]
+        if is_constant(root) or is_variable(root):
+            return Term(root), string[i:]
+        assert is_function(root)
+        assert i < len(string) and string[i] == '('
+        rem = string[i + 1:]
+        args = []
+        arg, rem = Term._parse_prefix(rem)
+        args.append(arg)
+        while rem[0] == ',':
+            arg, rem = Term._parse_prefix(rem[1:])
+            args.append(arg)
+        assert rem[0] == ')'
+        return Term(root, args), rem[1:]
         # Task 7.3a
 
     @staticmethod
@@ -171,6 +191,9 @@ class Term:
         Returns:
             A term whose standard string representation is the given string.
         """
+        term, remainder = Term._parse_prefix(string)
+        assert remainder == ''
+        return term
         # Task 7.3b
 
     def constants(self) -> Set[str]:
