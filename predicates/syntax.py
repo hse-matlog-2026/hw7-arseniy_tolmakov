@@ -113,6 +113,9 @@ class Term:
         Returns:
             The standard string representation of the current term.
         """
+        if is_constant(self.root) or is_variable(self.root):
+            return self.root
+        return self.root + '(' + ','.join(map(str, self.arguments)) + ')'
         # Task 7.1
 
     def __eq__(self, other: object) -> bool:
@@ -380,6 +383,16 @@ class Formula:
         Returns:
             The standard string representation of the current formula.
         """
+        if is_equality(self.root):
+            return str(self.arguments[0]) + '=' + str(self.arguments[1])
+        if is_relation(self.root):
+            return self.root + '(' + ','.join(map(str, self.arguments)) + ')'
+        if is_unary(self.root):
+            return self.root + str(self.first)
+        if is_binary(self.root):
+            return '(' + str(self.first) + self.root + str(self.second) + ')'
+        if is_quantifier(self.root):
+            return self.root + self.variable + '[' + str(self.statement) + ']'
         # Task 7.2
 
     def __eq__(self, other: object) -> bool:
