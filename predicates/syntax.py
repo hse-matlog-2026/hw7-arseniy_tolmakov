@@ -460,6 +460,48 @@ class Formula:
             name (e.g., ``'f(y)=x12'``), then the parsed prefix will include
             that entire name (and not just a part of it, such as ``'f(y)=x1'``).
         """
+        if is_unary(string[0]):
+            first, remainder = Formula._parse_prefix(string[1:])
+            return Formula(string[0], first), remainder
+
+        if is_quantifier(string[0]):
+            i = 1
+            while i < len(string) and string[i].isalnum():
+                i += 1
+            variable = string[1:i]
+            statement, remainder = Formula._parse_prefix(string[i+1:])
+            return Formula(string[0], variable, statement), remainder[1:]
+
+        if string[0] == '(':
+            first, remainder = Formula._parse_prefix(string[1:])
+            if remainder[:2] == '->':
+                op = '->'
+                second, remainder = Formula._parse_prefix(remainder[2:])
+            else:
+                op = remainder[0]
+                second, remainder = Formula._parse_prefix(remainder[1:])
+            return Formula(op, first, second), remainder[1:]
+
+        if is_relation(string[0]):
+            i = 1
+            while i < len(string) and string[i].isalnum():
+                i += 1
+            root = string[:i]
+            remainder = string[i:]
+            if len(remainder) > 0 and remainder[0] == '(':
+                remainder = remainder[1:]
+                arguments = []
+                if remainder[0] != ')':
+                    arg, remainder = Term._parse_prefix(remainder)
+                    arguments.append(arg)
+                    while remainder[0] == ',':
+                        arg, remainder = Term._parse_prefix(remainder[1:])
+                        arguments.append(arg)
+                return Formula(root, arguments), remainder[1:]
+
+        first, remainder = Term._parse_prefix(string)
+        second, remainder = Term._parse_prefix(remainder[1:])
+        return Formula('=', [first, second]), remainder
         # Task 7.4a
 
     @staticmethod
@@ -472,6 +514,9 @@ class Formula:
         Returns:
             A formula whose standard string representation is the given string.
         """
+        formula, remainder = Formula._parse_prefix(string)
+        assert remainder == ''
+        return formula
         # Task 7.4b
 
     def constants(self) -> Set[str]:
