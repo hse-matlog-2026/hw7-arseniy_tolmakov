@@ -543,6 +543,16 @@ class Formula:
         Returns:
             A set of all constant names used in the current formula.
         """
+        if is_equality(self.root) or is_relation(self.root):
+            res = set()
+            for arg in self.arguments:
+                res |= arg.constants()
+            return res
+        if is_unary(self.root):
+            return self.first.constants()
+        if is_binary(self.root):
+            return self.first.constants() | self.second.constants()
+        return self.statement.constants()
         # Task 7.6a
 
     def variables(self) -> Set[str]:
@@ -551,6 +561,16 @@ class Formula:
         Returns:
             A set of all variable names used in the current formula.
         """
+        if is_equality(self.root) or is_relation(self.root):
+            res = set()
+            for arg in self.arguments:
+                res |= arg.variables()
+            return res
+        if is_unary(self.root):
+            return self.first.variables()
+        if is_binary(self.root):
+            return self.first.variables() | self.second.variables()
+        return {self.variable} | self.statement.variables()
         # Task 7.6b
 
     def free_variables(self) -> Set[str]:
@@ -560,6 +580,16 @@ class Formula:
             A set of every variable name that is used in the current formula not
             only within a scope of a quantification on that variable name.
         """
+        if is_equality(self.root) or is_relation(self.root):
+            res = set()
+            for arg in self.arguments:
+                res |= arg.variables()
+            return res
+        if is_unary(self.root):
+            return self.first.free_variables()
+        if is_binary(self.root):
+            return self.first.free_variables() | self.second.free_variables()
+        return self.statement.free_variables() - {self.variable}
         # Task 7.6c
 
     def functions(self) -> Set[Tuple[str, int]]:
@@ -570,6 +600,16 @@ class Formula:
             A set of pairs of function name and arity (number of arguments) for
             all function names used in the current formula.
         """
+        if is_equality(self.root) or is_relation(self.root):
+            res = set()
+            for arg in self.arguments:
+                res |= arg.functions()
+            return res
+        if is_unary(self.root):
+            return self.first.functions()
+        if is_binary(self.root):
+            return self.first.functions() | self.second.functions()
+        return self.statement.functions()
         # Task 7.6d
 
     def relations(self) -> Set[Tuple[str, int]]:
@@ -580,6 +620,15 @@ class Formula:
             A set of pairs of relation name and arity (number of arguments) for
             all relation names used in the current formula.
         """
+        if is_equality(self.root):
+            return set()
+        if is_relation(self.root):
+            return {(self.root, len(self.arguments))}
+        if is_unary(self.root):
+            return self.first.relations()
+        if is_binary(self.root):
+            return self.first.relations() | self.second.relations()
+        return self.statement.relations()
         # Task 7.6e
 
     def substitute(self, substitution_map: Mapping[str, Term],
