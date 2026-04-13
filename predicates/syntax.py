@@ -202,6 +202,14 @@ class Term:
         Returns:
             A set of all constant names used in the current term.
         """
+        if is_constant(self.root):
+            return {self.root}
+        if is_variable(self.root):
+            return set()
+        res = set()
+        for arg in self.arguments:
+            res |= arg.constants()
+        return res
         # Task 7.5a
 
     def variables(self) -> Set[str]:
@@ -210,6 +218,14 @@ class Term:
         Returns:
             A set of all variable names used in the current term.
         """
+        if is_variable(self.root):
+            return {self.root}
+        if is_constant(self.root):
+            return set()
+        res = set()
+        for arg in self.arguments:
+            res |= arg.variables()
+        return res
         # Task 7.5b
 
     def functions(self) -> Set[Tuple[str, int]]:
@@ -220,6 +236,12 @@ class Term:
             A set of pairs of function name and arity (number of arguments) for
             all function names used in the current term.
         """
+        if is_constant(self.root) or is_variable(self.root):
+            return set()
+        res = {(self.root, len(self.arguments))}
+        for arg in self.arguments:
+            res |= arg.functions()
+        return res
         # Task 7.5c
 
     def substitute(self, substitution_map: Mapping[str, Term],
@@ -463,7 +485,6 @@ class Formula:
         if is_unary(string[0]):
             first, remainder = Formula._parse_prefix(string[1:])
             return Formula(string[0], first), remainder
-
         if is_quantifier(string[0]):
             i = 1
             while i < len(string) and string[i].isalnum():
@@ -471,7 +492,6 @@ class Formula:
             variable = string[1:i]
             statement, remainder = Formula._parse_prefix(string[i+1:])
             return Formula(string[0], variable, statement), remainder[1:]
-
         if string[0] == '(':
             first, remainder = Formula._parse_prefix(string[1:])
             if remainder[:2] == '->':
@@ -481,7 +501,6 @@ class Formula:
                 op = remainder[0]
                 second, remainder = Formula._parse_prefix(remainder[1:])
             return Formula(op, first, second), remainder[1:]
-
         if is_relation(string[0]):
             i = 1
             while i < len(string) and string[i].isalnum():
@@ -498,7 +517,6 @@ class Formula:
                         arg, remainder = Term._parse_prefix(remainder[1:])
                         arguments.append(arg)
                 return Formula(root, arguments), remainder[1:]
-
         first, remainder = Term._parse_prefix(string)
         second, remainder = Term._parse_prefix(remainder[1:])
         return Formula('=', [first, second]), remainder
