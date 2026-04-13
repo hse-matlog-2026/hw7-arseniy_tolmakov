@@ -145,7 +145,15 @@ class Model(Generic[T]):
         assert term.variables().issubset(assignment.keys())
         for function,arity in term.functions():
             assert function in self.function_interpretations and \
-                   self.function_arities[function] == arity
+                self.function_arities[function] == arity
+        if is_constant(term.root):
+            return self.constant_interpretations[term.root]
+        if is_variable(term.root):
+            return assignment[term.root]
+        args = []
+        for arg in term.arguments:
+            args.append(self.evaluate_term(arg, assignment))
+        return self.function_interpretations[term.root][tuple(args)]
         # Task 7.7
 
     def evaluate_formula(self, formula: Formula,
